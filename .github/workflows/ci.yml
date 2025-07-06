@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies on Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libsdl2-dev
+
+    - name: Install dependencies on macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install sdl2
+        if ! command -v python3 &> /dev/null; then
+          brew install python
+        fi
+
+    - name: Install dependencies on Windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        choco install -y mingw make python3 sdl2
+        refreshenv
+
+    - name: Build project on Linux/macOS
+      if: runner.os != 'Windows'
+      run: make
+
+    - name: Build project on Windows
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: make
+
+    - name: Run unit tests
+      run: |
+        if [ -d tests ]; then
+          ./build/retroconsole --run-tests
+        else
+          echo "No tests directory found, skipping tests"
+        fi
+      shell: bash
+      if: runner.os != 'Windows'
+
+    - name: Run unit tests (Windows)
+      run: |
+        if (Test-Path tests) {
+          .\build\retroconsole.exe --run-tests
+        } else {
+          Write-Host "No tests directory found, skipping tests"
+        }
+      shell: pwsh
+      if: runner.os == 'Windows'
