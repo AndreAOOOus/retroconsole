@@ -1,0 +1,24 @@
+# Build artifacts
+/build/
+*.o
+*.obj
+*.exe
+*.out
+
+# SDL2
+*.dll
+*.so
+*.dylib
+
+# Assembler Python
+__pycache__/
+*.pyc
+
+# Logs, temporanei
+*.log
+*.tmp
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
